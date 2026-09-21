@@ -29,4 +29,14 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    // logs
+    public function userLogs()
+    {
+        return $this->hasMany(AuditLog::class);
+    }
+    // conversation_users
+    public function conversationUsers()
+    {
+        return $this->hasMany(Conversation_user::class);
+    }
 }

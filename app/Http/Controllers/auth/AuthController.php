@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\auth;
 use App\Models\User;
-use App\Models\AuditLog;
 use App\Http\Controllers\Controller;
 use App\Mail\WelcomeEmail;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -33,12 +33,23 @@ public function register(Request $request)
 
     // Token 
     $token = $user->createToken('auth-token');
-
+    // log action $userId,$action,$body
+  $logs = AuditLog::logAction(
+        $request,
+        $user->id,
+        'Account Creation',
+         [
+        'message' => 'User created an account successfully',
+        'name' => $user->name,
+        'email' => $user->email,
+    ]
+    );
     // response
     return response()->json([
         'message' => 'Account created successfully',
         'user'    => $user,
         'token'   => $token,
+        'logs'    =>$logs,
     ], 201);
 }
     // login
@@ -57,14 +68,35 @@ $user = User::where('email', $request->email)->first();
 
 // 2. Check if user exists
 if (!$user) {
+    // log action
+      $logs = AuditLog::logAction(
+        $request,
+        null,
+        'Login Failure',
+         [
+        'message' => 'User failed to log into account',
+    ]
+    );
     return response()->json([
-        'message' => 'Invalid credentials'
+        'message' => 'Invalid credentials',
+        'logs'=>$logs
     ], 401);
+    
 }
 
 
     // 3. Check existence AND verify password using OR (||)
     if (!$user || !Hash::check($request->password, $user->password)) {
+        // log action
+     AuditLog::logAction(
+            $request,
+            $user->id,
+            'Login Failure',
+            [
+                'message' => 'Login failed - incorrect password',
+                'email' => $user->email,
+            ]
+        );
         return response()->json([
             'message' => 'Invalid email or password'
         ], 401);
@@ -79,24 +111,55 @@ if (!$user) {
     ,
     [],
     $expiresAt );
-   
+   // log action
+     $logs = AuditLog::logAction(
+        $request,
+        $user->id,
+        'Account login',
+         [
+        'message' => 'User logged into account successfully',
+        'name' => $user->name,
+        'email' => $user->email,
+    ]
+    );
     //response
     return response()->json([
         'token' => $token,
-        'user'  => $user
+        'user'  => $user,
+        'logs'  =>$logs
     ], 200);
 }
     // logout logic
     public function logout(Request $request)
 {
+    $user=$request->user();
+    // log action
+      $logs = AuditLog::logAction(
+        $request,
+        $user->id,
+        'Account Logout',
+         [
+        'message' => 'User logged out of account ',
+        'name' => $user->name,
+        'email' => $user->email,
+    ]
+    );
     // Revoke the specific token that was used to authenticate this request
     $request->user()->currentAccessToken()->delete();
 
     return response()->json([
-        'message' => 'Logged out successfully'
+        'message' => 'Logged out successfully',
+        'logs'=>$logs
     ], 200);
 }
 
+// get the current logged in user
+public function getMe(Request $request)
+{
+    $user=$request->user();
+    // response
+    return response()->json($user);
+}
 
 }
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\api\MessagesController;
 use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\auth\AuthController;
 use Illuminate\Http\Request;
@@ -14,7 +15,9 @@ Route::post('/login',[AuthController::class,'login'])->middleware('throttle:3,1'
 // log out endpoint
 Route::post('/logout',[AuthController::class,'logout'])->middleware('auth:sanctum')
 ->name('logout');
-
+// get current logged in user
+Route::get('/me',[AuthController::class,'getMe'])->middleware('auth:sanctum')
+->name('current user');
 // user management
 // all users
 Route::get('/users',[UserController::class,'index'])
@@ -39,4 +42,24 @@ Route::middleware(['auth:sanctum', 'role:admin,super_admin'])->group(function ()
     // users stats summary
     Route::get('/users_stats/summary',[UserController::class,'userSummary'])
     ->name('user_stats summary');
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    // send message to another user
+    Route::post('/messages', [MessagesController::class, 'store'])
+    ->name('send message');
+     // massDeleteMessages
+    Route::delete('/messages/delete',[MessagesController::class,'massDeleteMessages'])
+    ->name('mass_delete message');
+    // conversationMessages
+    Route::get('/conversation/{conversation}/messages',[MessagesController::class,'conversationMessages'])
+    ->name('conversation messages');
+    // delete messages deleteMessage
+    Route::delete('/messages/{message}/delete',[MessagesController::class,'deleteMessage'])
+    ->name('delete message');
+    // replyMessage
+    Route::post('/messages/{message}/reply',[MessagesController::class,'replyMessage'])
+    ->name('reply message');
+    // edit message editMessage
+    Route::put('/messages/{message}/edit',[MessagesController::class,'editMessage']);
 });
