@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Conversation extends Model
 {
+    // allowed
+    protected $fillable = [
+        'type',
+        'name'
+    ];
     // conversationUsers
     public function conversationUsers()
     {

@@ -39,4 +39,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Conversation_user::class);
     }
+     // reactions
+    public function reactions()
+    {
+        return $this->hasMany(MessageReaction::class);
+    }
+    // bookmark
+    public function bookmarks()
+    {
+        return $this->hasMany(MessageBookmark::class);
+    }
 }
