@@ -18,4 +18,20 @@ class Message extends Model
     {
         return $this->belongsTo(Conversation::class);
     }
+    // attachments
+    public function attachments()
+    {
+        return $this->hasMany(Attachment::class);
+    }
+    // reactions
+    public function reactions()
+    {
+        return $this->hasMany(MessageReaction::class);
+    }
+    // bookmarks
+    public function bookmarks()
+{
+    return $this->hasMany(MessageBookmark::class);
+}
+
 }

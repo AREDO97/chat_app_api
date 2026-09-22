@@ -4,22 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Conversation_user extends Model
+class MessageReaction extends Model
 {
-    //
+    // allowed
     protected $fillable = [
+        'message_id',
         'user_id',
-        'conversation_id',
-        'role'
+        'reaction'
     ];
-    // coversation 
-    public function conversation()
-    {
-        return $this->belongsTo(Conversation::class);
-    }
     // user
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    // message
+    public function message()
+    {
+        return $this->belongsTo(Message::class);
     }
 }

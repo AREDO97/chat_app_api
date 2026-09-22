@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Conversation;
 use App\Models\Conversation_user;
 use App\Models\User;
+use App\Models\Attachment;
 use App\Models\Message;
 
 class MessagesController extends Controller
@@ -18,6 +19,8 @@ class MessagesController extends Controller
     $request->validate([
         'receiver_id' => ['required', 'exists:users,id'],
         'body' => ['required', 'string', 'max:5000'],
+        'image' => ['nullable', 'file', 'image', 'max:10240'],
+        'audio' => ['nullable', 'file', 'mimes:mp3,wav,m4a,ogg', 'max:20480'],
     ]);
 
     // 2. Authenticated user
@@ -67,10 +70,46 @@ class MessagesController extends Controller
         'body' => encrypt($request->body),
     ]);
 
+  if ($request->hasFile('image')) {
+
+    Attachment::createForMessage(
+        $message,
+        $request->file('image'),
+        'chat/images'
+    );
+}
+// audios
+if ($request->hasFile('audio')) {
+
+    Attachment::createForMessage(
+        $message,
+        $request->file('audio'),
+        'chat/audios'
+    );
+}
+// videos
+if ($request->hasFile('video')) {
+
+    Attachment::createForMessage(
+        $message,
+        $request->file('video'),
+        'chat/videos'
+    );
+}
+
+// document
+if ($request->hasFile('document')) {
+
+    Attachment::createForMessage(
+        $message,
+        $request->file('document'),
+        'chat/documents'
+    );
+}
     // 8. Return response
     return response()->json([
         'message' => 'Message sent successfully',
-        'data' => $message,
+        'data' => $message->load('attachments'),
     ], 201);
 }
 
@@ -99,6 +138,12 @@ class MessagesController extends Controller
                 $message->body=decrypt($message->body);
             }
         // response
+        $conversation->messages()
+    ->where('sender_id', '!=', $user->id)
+    ->whereNull('read_at')
+    ->update([
+        'read_at' => now(),
+    ]);
         return response()->json([
             'messages'=>$messages,
             'conversation_users'=>$coversationUsers
@@ -244,4 +289,16 @@ class MessagesController extends Controller
        ]);
 
     }
+
+    // message attachments
+    public function messageAttachments(Request $request,Message $message)
+    {
+        $attachments=$message->attachments;
+        // response
+        return response()->json([
+            'message'=>$message,
+            'message_attachments'=>$attachments
+        ]);
+    }
+
 }

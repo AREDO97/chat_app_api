@@ -1,6 +1,11 @@
 <?php
 
+use App\Http\Controllers\api\BookMarkController;
+use App\Http\Controllers\api\ConversationController;
+use App\Http\Controllers\api\GroupController;
+use App\Http\Controllers\api\MessageReactionController;
 use App\Http\Controllers\api\MessagesController;
+use App\Http\Controllers\api\PinnedController;
 use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\auth\AuthController;
 use Illuminate\Http\Request;
@@ -62,4 +67,50 @@ Route::middleware('auth:sanctum')->group(function () {
     ->name('reply message');
     // edit message editMessage
     Route::put('/messages/{message}/edit',[MessagesController::class,'editMessage']);
+    // message attachments
+    Route::get('/messages/{message}/attachments',[MessagesController::class,'messageAttachments']);
+});
+
+// user conversations
+Route::middleware('auth:sanctum')->group(function () {
+// all user conversations
+Route::get('/conversations',[ConversationController::class,'index']);
+// conversation
+Route::get('/conversations/{conversation}',[ConversationController::class,'show']);
+
+});
+
+// message reaction
+Route::middleware('auth:sanctum')->group(function () {
+// message reaction
+Route::post('/messages/{message}/reaction',[MessageReactionController::class,'reactToMessage']);
+
+});
+
+// book mark management
+Route::middleware('auth:sanctum')->group(function () {
+// bookmarkedMessages
+Route::get('/bookmarks',[BookMarkController::class,'bookmarkedMessages']);
+// create book mark
+Route::post('/bookmark/{message}/create',[BookMarkController::class,'create']);
+// delete book mark
+Route::delete('/bookmark/{bookmark}/delete',[BookMarkController::class,'destroy']);
+});
+
+// pinned message management
+Route::middleware('auth:sanctum')->group(function () {
+// pin a message
+Route::post('/pin/{message}/create',[PinnedController::class,'create']);
+// get pinned 
+Route::get('/pinned_messages',[PinnedController::class,'index']);
+});
+
+// group management controller
+Route::middleware('auth:sanctum')->group(function () {
+ // create group
+ Route::post('/group/create',[GroupController::class,'create']);
+ // send message to group
+ Route::post('/group/{conversation}/message',[GroupController::class,'sendMessageToGroup']);
+ // delete group
+ Route::delete('/group/{conversation}/delete',[GroupController::class,'destroy']);
 });
