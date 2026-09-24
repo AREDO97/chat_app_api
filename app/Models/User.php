@@ -49,4 +49,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(MessageBookmark::class);
     }
+    // statuses
+    public function statuses()
+    {
+        return $this->hasMany(Status::class);
+    }
+    // status views
+    public function statusViews()
+    {
+        return $this->hasMany(StatusViews::class);
+    }
 }

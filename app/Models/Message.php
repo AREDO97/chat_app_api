@@ -12,6 +12,8 @@ class Message extends Model
         'sender_id',
         'body',
         'is_deleted',
+        'media_path',
+        'type',
     ];
     // conversation
     public function conversation()

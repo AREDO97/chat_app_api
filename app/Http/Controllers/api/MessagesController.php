@@ -18,9 +18,11 @@ class MessagesController extends Controller
     // 1. Validate
     $request->validate([
         'receiver_id' => ['required', 'exists:users,id'],
-        'body' => ['required', 'string', 'max:5000'],
+        'body' => ['nullable', 'string', 'max:5000'],
         'image' => ['nullable', 'file', 'image', 'max:10240'],
         'audio' => ['nullable', 'file', 'mimes:mp3,wav,m4a,ogg', 'max:20480'],
+        'audio_record' => ['nullable', 'file', 'mimes:mp3,wav,m4a,ogg', 'max:20480'],
+
     ]);
 
     // 2. Authenticated user
@@ -63,12 +65,34 @@ class MessagesController extends Controller
         ]);
     }
 
-    // 7. Create message
+
+    $path=null;
+ // 7. Store audio file
+ if($request->hasFile('audio_record'))
+    {
+$path = $request->file('audio_record')
+        ->store('messages', 'public');
+
+          // 8. Create message
+    $message = Message::create([
+        'conversation_id' => $conversation->id,
+        'sender_id' => $sender->id,
+        'type' => 'audio',
+        'body'=>$request->body,
+        'media_path' => $path,
+    ]);
+    }
+    else
+    {
+  // 7. Create message
     $message = Message::create([
         'conversation_id' => $conversation->id,
         'sender_id' => $sender->id,
         'body' => encrypt($request->body),
     ]);
+    }
+  
+
 
   if ($request->hasFile('image')) {
 
@@ -300,5 +324,73 @@ if ($request->hasFile('document')) {
             'message_attachments'=>$attachments
         ]);
     }
+    // send audio message
+// send audio message
+public function audio(Request $request)
+{
+    // 1. Validate
+    $request->validate([
+        'receiver_id' => ['required', 'exists:users,id'],
+        'audio' => ['required', 'file', 'mimes:mp3,wav,m4a,ogg', 'max:20480'],
+    ]);
 
+    // 2. Authenticated user
+    $sender = $request->user();
+
+    // 3. Receiver
+    $receiver = User::findOrFail($request->receiver_id);
+
+    // 4. Prevent self messaging
+    if ($sender->id === $receiver->id) {
+        return response()->json([
+            'message' => 'You cannot send a message to yourself.'
+        ], 422);
+    }
+
+    // 5. Find existing conversation
+    $conversation = Conversation::whereHas('conversationUsers', function ($query) use ($sender) {
+        $query->where('user_id', $sender->id);
+    })
+    ->whereHas('conversationUsers', function ($query) use ($receiver) {
+        $query->where('user_id', $receiver->id);
+    })
+    ->withCount('conversationUsers')
+    ->having('conversation_users_count', 2)
+    ->first();
+
+    // 6. Create conversation if it doesn't exist
+    if (!$conversation) {
+
+        $conversation = Conversation::create();
+
+        Conversation_user::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $sender->id,
+        ]);
+
+        Conversation_user::create([
+            'conversation_id' => $conversation->id,
+            'user_id' => $receiver->id,
+        ]);
+    }
+
+    // 7. Store audio file
+    $path = $request->file('audio')
+        ->store('messages', 'public');
+
+    // 8. Create message
+    $message = Message::create([
+        'conversation_id' => $conversation->id,
+        'sender_id' => $sender->id,
+        'type' => 'audio',
+        'body'=>$request->body,
+        'media_path' => $path,
+    ]);
+
+    // 9. Return response
+    return response()->json([
+        'message' => 'Audio message sent successfully',
+        'data' => $message
+    ], 201);
+}
 }
