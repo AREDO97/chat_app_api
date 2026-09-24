@@ -16,13 +16,12 @@ class MessagesController extends Controller
     public function store(Request $request)
 {
     // 1. Validate
-    $request->validate([
-        'receiver_id' => ['required', 'exists:users,id'],
-        'body' => ['nullable', 'string', 'max:5000'],
-        'image' => ['nullable', 'file', 'image', 'max:10240'],
-        'audio' => ['nullable', 'file', 'mimes:mp3,wav,m4a,ogg', 'max:20480'],
-        'audio_record' => ['nullable', 'file', 'mimes:mp3,wav,m4a,ogg', 'max:20480'],
-
+  $request->validate([
+        'receiver_id'  => ['required', 'exists:users,id'],
+        'body'         => ['nullable', 'string', 'max:5000'],
+        'image'        => ['nullable', 'file', 'image', 'max:10240'],
+        'audio'        => ['nullable', 'file', 'mimes:mp3,wav,m4a,ogg,webm,mp4', 'max:20480'],
+        'audio_record' => ['nullable', 'file', 'mimes:mp3,wav,m4a,ogg,webm,mp4', 'max:20480'],
     ]);
 
     // 2. Authenticated user
