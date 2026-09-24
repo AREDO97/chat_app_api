@@ -6,6 +6,7 @@ use App\Http\Controllers\api\GroupController;
 use App\Http\Controllers\api\MessageReactionController;
 use App\Http\Controllers\api\MessagesController;
 use App\Http\Controllers\api\PinnedController;
+use App\Http\Controllers\api\StatusController;
 use App\Http\Controllers\api\UserController;
 use App\Http\Controllers\auth\AuthController;
 use Illuminate\Http\Request;
@@ -53,6 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // send message to another user
     Route::post('/messages', [MessagesController::class, 'store'])
     ->name('send message');
+    // send audio
+    Route::post('/messages/audio', [MessagesController::class, 'audio'])
+    ->name('send audio');
      // massDeleteMessages
     Route::delete('/messages/delete',[MessagesController::class,'massDeleteMessages'])
     ->name('mass_delete message');
@@ -113,4 +117,20 @@ Route::middleware('auth:sanctum')->group(function () {
  Route::post('/group/{conversation}/message',[GroupController::class,'sendMessageToGroup']);
  // delete group
  Route::delete('/group/{conversation}/delete',[GroupController::class,'destroy']);
+});
+
+// status management
+Route::middleware('auth:sanctum')->group(function () {
+// statusAll
+Route::get('/all_status',[StatusController::class,'statusAll']);
+// create a status
+Route::post('/status/post',[StatusController::class,'create']);
+// user statuses
+Route::get('/statuses/user',[StatusController::class,'index']);
+// update status
+Route::put('/status/{status}/update',[StatusController::class,'update']);
+// delete status
+Route::delete('/status/{status}/delete',[StatusController::class,'destroy']);
+// view status
+Route::post('/statuses/{status}/view', [StatusController::class, 'viewStatus']);
 });
